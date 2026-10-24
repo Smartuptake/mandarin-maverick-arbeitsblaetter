@@ -16,10 +16,13 @@
   --bg:#10162A; --panel:#18203A; --fg:#E8ECF7; --muted:#A3ACC8; --line:#2C3656;
   --navy:#9FB2F0; --rouge:#FF6B70; --clair:#222C4D; --paper:#FFFFFF; --desk:#0B1022; --ok:#5BD08E; color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px}
-body[data-fach="mm"]{--navy:#02736F;--rouge:#039A9A;--clair:#E6F5F5;--display:'Helvetica Neue',Helvetica,Arial,sans-serif;--body:'Helvetica Neue',Helvetica,Arial,'Noto Sans',sans-serif}
+body[data-fach="mm"]{--navy:#02736F;--rouge:#039A9A;--clair:#E6F5F5;--display:'Fredoka MM','Nunito MM',sans-serif;--body:'Nunito MM',Nunito,'Helvetica Neue',Arial,sans-serif}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body[data-fach="mm"]{--navy:#6FD6D2;--rouge:#6FD6D2;--clair:#173B3C}}
 :root[data-theme="dark"] body[data-fach="mm"]{--navy:#6FD6D2;--rouge:#6FD6D2;--clair:#173B3C}
 @font-face{font-family:'MM Kai';src:url(assets/fonts/MMKai-gb2312.ttf) format('truetype');font-display:swap}
+@font-face{font-family:'Nunito MM';src:url(assets/fonts/NunitoMM-Regular.woff) format('woff');font-weight:400;font-display:swap}
+@font-face{font-family:'Nunito MM';src:url(assets/fonts/NunitoMM-Bold.woff) format('woff');font-weight:700;font-display:swap}
+@font-face{font-family:'Fredoka MM';src:url(assets/fonts/FredokaMM-SemiBold.woff) format('woff');font-weight:600;font-display:swap}
 *{box-sizing:border-box}
 .top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--panel)}
 .top h1{font-family:var(--display);font-weight:600;font-size:20px;margin:0;color:var(--navy)}
@@ -480,7 +483,7 @@ schreiben {"checkliste": ["deutscher Punkt", ...], "zeilen": 12, "muster": "fran
       const probe = B.render(sheet, { modus: 'schueler', asset: n => 'assets/' + n });
       const pfade = [...new Set([...probe.matchAll(/src="(assets\/[^"]+)"/g)].map(x => x[1]))];
       const karte = {}; for (const p of pfade) karte[p.slice(7)] = await alsDataUri(p);
-      const html = MM ? B.standalone(sheet, { asset: n => karte[n] || '', fontHanzi: await alsDataUri('assets/fonts/MMKai-gb2312.ttf') })
+      const html = MM ? B.standalone(sheet, { asset: n => karte[n] || '', fontHanzi: await alsDataUri('assets/fonts/MMKai-gb2312.ttf'), fontNunitoMM: await alsDataUri('assets/fonts/NunitoMM-Regular.woff'), fontNunitoMMBold: await alsDataUri('assets/fonts/NunitoMM-Bold.woff'), fontFredokaMM: await alsDataUri('assets/fonts/FredokaMM-SemiBold.woff') })
         : B.standalone(sheet, { asset: n => karte[n] || '', fontFredoka: await alsDataUri('assets/fonts/Fredoka.ttf'), fontNunito: await alsDataUri('assets/fonts/Nunito.ttf') });
       await speichernDatei(dateiname('-Schuelerfassung.html'), html);
     } catch (err) { melden('Schülerfassung konnte nicht gebaut werden.', 'fehler'); }

@@ -12,7 +12,8 @@ const args = process.argv.slice(2), FACH = (args.find(a => a.startsWith('--fach=
 const ziel = path.resolve(args.find(a => !a.startsWith('--') && a !== 'pruef') || path.join(root, 'site'));
 const NAME = FACH === 'mm' ? 'Mandarin Maverick' : 'French Solution';
 fs.mkdirSync(path.join(ziel, 'blaetter'), { recursive: true });
-const mime = p => p.endsWith('.png') ? 'image/png' : p.endsWith('.ttf') ? 'font/ttf' : 'application/octet-stream';
+const mime = p => p.endsWith('.png') ? 'image/png' : p.endsWith('.ttf') ? 'font/ttf' : p.endsWith('.woff') ? 'font/woff' : 'application/octet-stream';
+const MMFONTS = () => ({ fontNunitoMM: uri('fonts/NunitoMM-Regular.woff'), fontNunitoMMBold: uri('fonts/NunitoMM-Bold.woff'), fontFredokaMM: uri('fonts/FredokaMM-SemiBold.woff') });   // Schriftwechsel 24.10.2026
 const uri = p => `data:${mime(p)};base64,` + fs.readFileSync(path.join(root, 'assets', p)).toString('base64');
 const liste = [];
 for (const f of fs.readdirSync(path.join(root, 'blaetter')).filter(f => f.endsWith('.json')).sort()) {
@@ -22,11 +23,11 @@ for (const f of fs.readdirSync(path.join(root, 'blaetter')).filter(f => f.endsWi
   const hanzi = () => { const tmp = path.join(root, 'site', '.sub-' + s.id + '.ttf'); fs.mkdirSync(path.dirname(tmp), { recursive: true });
     execFileSync(PY, ['-c', 'import sys;from fontTools import subset;o=subset.Options();o.notdef_outline=True;f=subset.load_font(sys.argv[1],o);t=subset.Subsetter(o);t.populate(text=sys.argv[2]);t.subset(f);subset.save_font(f,sys.argv[3],o)',
       WENKAI, B.zeichenListe(s), tmp]); const u = 'data:font/ttf;base64,' + fs.readFileSync(tmp).toString('base64'); fs.unlinkSync(tmp); return u; };
-  const html = s.fach === 'mm' ? B.standalone(s, { asset: uri, fontHanzi: hanzi() }) : B.standalone(s, { asset: uri, fontFredoka: uri('fonts/Fredoka.ttf'), fontNunito: uri('fonts/Nunito.ttf') });
+  const html = s.fach === 'mm' ? B.standalone(s, { asset: uri, fontHanzi: hanzi(), ...MMFONTS() }) : B.standalone(s, { asset: uri, fontFredoka: uri('fonts/Fredoka.ttf'), fontNunito: uri('fonts/Nunito.ttf') });
   fs.writeFileSync(path.join(ziel, 'blaetter', s.id + '.html'), html);
   // Druck- und Lösungsfassung zum Prüfen (verweist auf assets/)
   if (PRUEF) for (const m of ['druck', 'loesung']) fs.writeFileSync(path.join(ziel, 'blaetter', `${s.id}-${m}.html`),
-    `<!doctype html><meta charset="utf-8"><title>${B.esc(s.titel)}</title><style>@font-face{font-family:'MM Kai';src:url(${uri("fonts/MMKai-gb2312.ttf")})}@font-face{font-family:Fredoka;src:url(${uri("fonts/Fredoka.ttf")})}@font-face{font-family:Nunito;src:url(${uri("fonts/Nunito.ttf")});font-weight:200 1000}${B.CSS}body{margin:0;padding:12mm;background:#fff}@page{size:A4;margin:12mm}</style>${B.render(s, { modus: m, asset: uri })}`);
+    `<!doctype html><meta charset="utf-8"><title>${B.esc(s.titel)}</title><style>@font-face{font-family:'MM Kai';src:url(${uri("fonts/MMKai-gb2312.ttf")})}@font-face{font-family:Fredoka;src:url(${uri("fonts/Fredoka.ttf")})}@font-face{font-family:Nunito;src:url(${uri("fonts/Nunito.ttf")});font-weight:200 1000}@font-face{font-family:'Nunito MM';src:url(${uri("fonts/NunitoMM-Regular.woff")})}@font-face{font-family:'Nunito MM';src:url(${uri("fonts/NunitoMM-Bold.woff")});font-weight:700}@font-face{font-family:'Fredoka MM';src:url(${uri("fonts/FredokaMM-SemiBold.woff")});font-weight:600}${B.CSS}body{margin:0;padding:12mm;background:#fff}@page{size:A4;margin:12mm}</style>${B.render(s, { modus: m, asset: uri })}`);
   liste.push(s);
 }
 const idx = `<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${NAME} – Arbeitsblätter</title>
@@ -41,7 +42,7 @@ const gz = path.join(ziel, 'generator'); fs.mkdirSync(gz, { recursive: true });
 fs.writeFileSync(path.join(gz, 'index.html'), '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}</style></head><body>'
   + fs.readFileSync(path.join(root, 'generator.html'), 'utf8').replace("const FACH = 'fs';", `const FACH = '${FACH}';`).replace('<title>FS Arbeitsblatt-Generator</title>', `<title>${FACH === 'mm' ? 'MM' : 'FS'} Arbeitsblatt-Generator</title>`) + '</body></html>');
 fs.copyFileSync(path.join(root, 'blatt.js'), path.join(gz, 'blatt.js'));
-const fremd = FACH === 'mm' ? /^(fs-|Fredoka|Nunito)/ : /^(mm-|MMKai)/;   // nur die Dateien der eigenen Marke
+const fremd = FACH === 'mm' ? /^(fs-|Fredoka\.|Nunito\.)/ : /^(mm-|MMKai|NunitoMM|FredokaMM)/;   // nur die Dateien der eigenen Marke (MM: Nunito MM / Fredoka MM seit 24.10.2026)
 fs.rmSync(path.join(gz, 'assets'), { recursive: true, force: true });
 fs.cpSync(path.join(root, 'assets'), path.join(gz, 'assets'), { recursive: true, filter: q => !fremd.test(path.basename(q)) });
 console.log('ok', liste.length, 'Blätter →', ziel);

@@ -1,6 +1,6 @@
 /* Arbeitsblatt-Renderer für French Solution (fach "fs") und Mandarin Maverick (fach "mm") – gemeinsam für Generator, Schülerfassung und GitHub-Build.
    render(sheet, {modus: 'druck' | 'loesung' | 'schueler', asset: name => url}) → HTML-Fragment (ohne <html>)
-   standalone(sheet, {asset, fontFredoka, fontNunito, fontHanzi}) → vollständige Schülerseite (offline, ohne externe Quellen)
+   standalone(sheet, {asset, fontFredoka, fontNunito, fontHanzi, fontNunitoMM, fontNunitoMMBold, fontFredokaMM}) → vollständige Schülerseite (offline, ohne externe Quellen)
    MM-Regeln (Designhandbuch v1.9): Hanzi immer #B02418 in Kaiti, Pinyin #2271FF eine Stufe größer, Deutsch #111111, Struktur Türkis #039A9A. */
 (function (root) {
   'use strict';
@@ -308,11 +308,11 @@
 .fsb .tz .hz.nach{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24pt;opacity:.22}
 .fsb .kp{background-image:linear-gradient(to right,var(--linie) .6pt,transparent .6pt),linear-gradient(to bottom,var(--linie) .6pt,transparent .6pt);background-size:11mm 11mm;border-right:.6pt solid var(--linie);border-bottom:.6pt solid var(--linie);width:calc(11mm * 16)}
 .fsb .zz{line-height:2.1}.fsb .zp{font-size:10pt}.fsb .zd{font-size:9pt;color:#111}
-.fsb.mm{--navy:#039A9A;--rouge:#039A9A;--clair:#E6F5F5;--grau:#5C5C5C;--linie:#A9C9C9;font-family:'Helvetica Neue',Helvetica,Arial,'Noto Sans',sans-serif;color:#111}
-.fsb.mm h1,.fsb.mm .kz,.fsb.mm .ueh,.fsb.mm .un,.fsb.mm .rt{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:700}
-.fsb.mm .ueh span,.fsb.mm .rt span,.fsb.mm .bh span{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif}
+.fsb.mm{--navy:#039A9A;--rouge:#039A9A;--clair:#E6F5F5;--grau:#5C5C5C;--linie:#A9C9C9;font-family:'Nunito MM',Nunito,'Helvetica Neue',Arial,sans-serif;color:#111}
+.fsb.mm h1,.fsb.mm .kz,.fsb.mm .ueh,.fsb.mm .un,.fsb.mm .rt{font-family:'Fredoka MM','Nunito MM',sans-serif;font-weight:600}
+.fsb.mm .ueh span,.fsb.mm .rt span,.fsb.mm .bh span{font-family:'Nunito MM',Nunito,'Helvetica Neue',Arial,sans-serif}
 .fsb.mm .logo{width:30mm}.fsb.mm .kf{grid-template-columns:30mm 1fr 24mm}
-.fsb.mm .bh{background:var(--clair);color:var(--navy);font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:700;border-bottom:1pt solid var(--navy)}.fsb.mm .bh span{opacity:1;color:#111}
+.fsb.mm .bh{background:var(--clair);color:var(--navy);font-family:'Fredoka MM','Nunito MM',sans-serif;font-weight:600;border-bottom:1pt solid var(--navy)}.fsb.mm .bh span{opacity:1;color:#111}
 .fsb.mm .blk{border-width:1.5pt}.fsb.mm .br{border-top-color:#CFE6E6}.fsb.mm .de{color:#111}.fsb.mm .lsg{color:#111;text-decoration-color:var(--navy)}
 .fsb.mm .sch-in{background:#F2FAFA;color:#111}.fsb.mm .sch-ta{color:#111;background:repeating-linear-gradient(#fff 0 7.4mm,#CFE6E6 7.4mm 7.6mm)}
 .fsb .hz{font-family:'MM Kai','Kaiti SC','STKaiti','KaiTi','Kaiti TC','LXGW WenKai',serif;color:#B02418;font-size:1.3em;font-weight:400}
@@ -325,13 +325,17 @@
     const o = Object.assign({ modus: 'schueler' }, opt || {}), M = marke(sheet), mm = sheet.fach === 'mm';
     const fonts = (o.fontFredoka ? `@font-face{font-family:Fredoka;src:url(${o.fontFredoka}) format('truetype');font-weight:300 700}` : '')
       + (o.fontNunito ? `@font-face{font-family:Nunito;src:url(${o.fontNunito}) format('truetype');font-weight:200 1000}` : '')
-      + (o.fontHanzi ? `@font-face{font-family:'MM Kai';src:url(${o.fontHanzi}) format('truetype')}` : '');
+      + (o.fontHanzi ? `@font-face{font-family:'MM Kai';src:url(${o.fontHanzi}) format('truetype')}` : '')
+      // MM seit 24.10.2026: Nunito MM (Text, Pinyin) und Fredoka MM (Überschriften), WOFF mit allen Pinyin-Zeichen
+      + (o.fontNunitoMM ? `@font-face{font-family:'Nunito MM';src:url(${o.fontNunitoMM}) format('woff');font-weight:400}` : '')
+      + (o.fontNunitoMMBold ? `@font-face{font-family:'Nunito MM';src:url(${o.fontNunitoMMBold}) format('woff');font-weight:700}` : '')
+      + (o.fontFredokaMM ? `@font-face{font-family:'Fredoka MM';src:url(${o.fontFredokaMM}) format('woff');font-weight:600}` : '');
     const key = (mm ? 'mmb-' : 'fsb-') + (sheet.id || 'blatt');
     const farbe = mm ? '#039A9A' : '#1C2B5A';
     return `<!doctype html><html lang="${M.lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(sheet.titel || M.kopf.titel)} – ${M.name}</title>
 <style>${fonts}${CSS}
 body{margin:0;background:${mm ? '#E6F0F0' : '#E9EDF5'}}.wrap{background:#fff;max-width:200mm;margin:0 auto;padding:12mm 10mm 16mm;min-height:100vh}
-.leiste{position:sticky;top:0;z-index:5;background:${farbe};color:#fff;font-family:${mm ? "'Helvetica Neue',Helvetica,Arial" : 'Nunito'},sans-serif;font-size:14px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:center;padding:8px 16px}
+.leiste{position:sticky;top:0;z-index:5;background:${farbe};color:#fff;font-family:${mm ? "'Nunito MM',Nunito,Arial" : 'Nunito'},sans-serif;font-size:14px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:center;padding:8px 16px}
 .leiste button{font:inherit;font-weight:700;background:#fff;color:${farbe};border:0;border-radius:6px;padding:6px 14px;cursor:pointer}.leiste button:focus-visible{outline:3px solid ${mm ? '#111' : '#E2383F'};outline-offset:2px}.leiste .st{opacity:.85}
 @media print{body{background:#fff}.leiste{display:none}.wrap{padding:0;max-width:none}@page{size:A4;margin:14mm 14mm 16mm}.fsb .sch-ta{border:0;resize:none;overflow:hidden}.fsb .sch-in{background:none}}
 @media (max-width:600px){.wrap{padding:16px}.fsb .br{grid-template-columns:7mm 1fr}.fsb .br .bc{grid-column:1/-1}.fsb .zo{grid-template-columns:1fr}.fsb .kf{grid-template-columns:1fr}.fsb .kp{width:100%}}
